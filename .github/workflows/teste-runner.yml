@@ -1,0 +1,25 @@
+name: Teste gratuito do GitHub Actions
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  teste:
+    name: Runner publico Ubuntu
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verificar o runner gratuito
+        shell: bash
+        run: |
+          echo "GitHub Actions funcionando!"
+          echo "SO: $(uname -s)"
+          node --version
+          python3 --version
+          test 2 -eq 2
+          echo "SUCESSO: runner executou sem secrets."

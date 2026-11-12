@@ -1,0 +1,31 @@
+name: CI Lab - synthetic contracts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "ci-lab/**"
+      - ".github/workflows/ci-lab-synthetic.yml"
+  pull_request:
+    paths:
+      - "ci-lab/**"
+      - ".github/workflows/ci-lab-synthetic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  synthetic-contracts:
+    name: Original fixtures and pure calculations
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Execute independent Node test suite
+        run: npm --prefix ci-lab test
