@@ -42,9 +42,16 @@ jobs:
           fi
 
       - name: Checkout the PRIVATE caller repository (never this public lab)
-        uses: actions/checkout@v7
+        # v6/v7 usam includeIf para credenciais; em alguns macOS self-hosted
+        # com _work apontando para outro caminho isso pode quebrar o fetch.
+        # v5 mantém compatibilidade com runners próprios; credenciais continuam
+        # temporárias e são removidas no pós-job por persist-credentials: false.
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
+          # Evita git clean -ffdx sobre node_modules grandes do workspace.
+          # npm ci recria dependências, e os testes usam banco descartável.
+          clean: false
 
       - name: Setup Node.js 24 on private runner
         uses: actions/setup-node@v7
