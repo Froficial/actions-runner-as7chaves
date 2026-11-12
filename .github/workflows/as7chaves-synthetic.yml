@@ -1,0 +1,37 @@
+name: As 7 Chaves - synthetic public laboratory
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "as7chaves-lab/**"
+      - ".github/workflows/as7chaves-synthetic.yml"
+  pull_request:
+    paths:
+      - "as7chaves-lab/**"
+      - ".github/workflows/as7chaves-synthetic.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: as7chaves-public-synthetic-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  synthetic-contracts:
+    name: As 7 Chaves - standalone synthetic checks
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Checkout public laboratory only
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verify original fictitious dashboard examples
+        run: npm --prefix as7chaves-lab test

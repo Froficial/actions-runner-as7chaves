@@ -1,0 +1,53 @@
+[
+  {
+    "scenario": "synthetic-empty",
+    "synthetic": true,
+    "leads": [],
+    "expected": {
+      "leads": 0,
+      "temperatures": {
+        "cold": 0,
+        "warm": 0,
+        "hot": 0,
+        "converted": 0,
+        "other": 0
+      }
+    }
+  },
+  {
+    "scenario": "synthetic-qualifying",
+    "synthetic": true,
+    "leads": [
+      {
+        "id": "synthetic-lead-alpha",
+        "synthetic": true,
+        "temperature": "cold"
+      },
+      {
+        "id": "synthetic-lead-beta",
+        "synthetic": true,
+        "temperature": "warm"
+      },
+      {
+        "id": "synthetic-lead-gamma",
+        "synthetic": true,
+        "temperature": "hot"
+      },
+      {
+        "id": "synthetic-lead-delta",
+        "synthetic": true,
+        "temperature": "unknown"
+      }
+    ],
+    "expected": {
+      "leads": 4,
+      "temperatures": {
+        "cold": 1,
+        "warm": 1,
+        "hot": 1,
+        "converted": 0,
+        "other": 1
+      }
+    }
+  }
+]
