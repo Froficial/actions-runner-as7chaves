@@ -1,0 +1,73 @@
+# Workflow público, sem código proprietário, senhas ou acesso ao repositório privado.
+# É chamado de dentro do próprio repositório privado. O checkout ocorre no
+# contexto do CHAMADOR e apenas no runner auto-hospedado registrado para ele.
+name: Private repository validation on owned runner
+
+on:
+  workflow_call:
+    inputs:
+      runner_labels_json:
+        description: 'JSON array of the dedicated private self-hosted runner labels'
+        type: string
+        required: true
+      test_script:
+        description: 'Path to an audited test script in the private caller repository'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  private-tests:
+    name: Validate caller's private checkout on its own runner
+    if: github.event_name != 'pull_request'
+    runs-on: ${{ fromJSON(inputs.runner_labels_json) }}
+    timeout-minutes: 40
+    steps:
+      - name: Ensure this is a private caller and self-hosted runner
+        shell: bash
+        env:
+          REPOSITORY_VISIBILITY: ${{ github.event.repository.private }}
+          SELECTED_SCRIPT: ${{ inputs.test_script }}
+        run: |
+          set -euo pipefail
+          if [[ "$REPOSITORY_VISIBILITY" != "true" ]]; then
+            echo "Recusado: somente repositórios privados podem usar este workflow."
+            exit 1
+          fi
+          if [[ ! "$SELECTED_SCRIPT" =~ ^scripts/[a-zA-Z0-9_./-]+\.sh$ ]] || [[ "$SELECTED_SCRIPT" == *".."* ]]; then
+            echo "Recusado: caminho de script não permitido."
+            exit 1
+          fi
+
+      - name: Checkout the PRIVATE caller repository (never this public lab)
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 24 on private runner
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Run audited local script in disposable Docker test environment
+        shell: bash
+        env:
+          SELECTED_SCRIPT: ${{ inputs.test_script }}
+        run: |
+          set -euo pipefail
+          if [[ ! -f "$SELECTED_SCRIPT" || -L "$SELECTED_SCRIPT" ]]; then
+            echo "Script ausente ou link simbólico proibido."
+            exit 1
+          fi
+          if [[ ! "$SELECTED_SCRIPT" =~ ^scripts/[a-zA-Z0-9_./-]+\.sh$ ]] || [[ "$SELECTED_SCRIPT" == *".."* ]]; then
+            echo "Caminho de script não permitido."
+            exit 1
+          fi
+          # O script existente de testes locais exige explicitamente não estar
+          # dentro do GitHub-hosted runner. Executamos somente nesta máquina
+          # privada, removendo este marcador para habilitar o modo LOCAL, que
+          # exige Docker efêmero na porta dinâmica e DB vazio.
+          unset GITHUB_ACTIONS
+          bash "$SELECTED_SCRIPT"
